@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<!-- Bootstrap and jQuery CDNs -->
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet"/>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js">
+	</script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js">
+	</script>
+	<title>Silly Ball</title>
+	<style type="text/css">
+		canvas{
+			border: 1px solid black;
+			/*border-top: none;*/
+			outline: none;
+		}
+		.endicator{
+			position: absolute;
+			top: 30px;
+			right: 50px;
+			border: 1px solid grey;
+			border-radius: 10px;
+		}
+		.instructions{
+			position: absolute;
+			top: 30px;
+			left: 20px;
+			/*border: 1px solid grey;
+			border-radius: 10px;*/
+		}
+		.credits{
+			position: absolute;
+			bottom: 10px;
+			right: 20px;
+		}
+		.ind{
+			float: left;
+			padding: 10px;
+			padding-bottom: 5px;
+			display: inline-block;
+		}
+		.light{
+			width: 30px;
+			height: 30px;
+			border-radius: 100%;
+			background-color: green;
+			display: inline-block;
+			margin: 5px;
+		}
+		.fix{
+			clear: both;
+		}
+		.glyphicon{
+			position: relative;
+			top: 10px;
+			font-size: 20px;
+		}
+	</style>
+</head>
+<body>
+
+<center>
+	<br/>
+	<canvas id="canvas" height="500" width="500">
+		<!-- Fall back message -->
+		<p>Your browser is too old that it doesn't support canvas tag, Shame on you !!</p>
+	</canvas>
+	<br/>
+</center>
+
+<div class="instructions">
+	<p>
+		W-S-D-A : Apply Force On The Ball
+		<br/>
+		Arrows : Toggle Gravity Direction (Press the same direction twice to turn off gravity)
+		<br/>
+		F : Toggle Friction
+		<br/>
+		B : Toggle Motion Blur
+		<br/>
+		R: Toggle Draw
+		<br/>
+		T : Toggle Box Top
+	</p>
+</div>
+
+<div class="endicator">
+	<div class="ind">
+		<center>
+			Gravity
+			<br/>
+			<span class="glyphicon glyphicon-arrow-down"></span>
+		</center>
+	</div>
+	<div class="ind">
+		<center>
+			Friction
+			<br/>
+			<span id="frictionLight" class="light"></span>
+		</center>
+	</div>	
+</div>
+
+<div class="credits">
+	Amr Saber
+</div>
+
+<script type="text/javascript">
+	
+	//the canvas in which the whole work is done
+	var canvas = document.getElementById('canvas');
+
+	//the context of the canvas to draw in
+	var ctx = canvas.getContext('2d');
+
+	canvas.height = $(window).height() - 30;
+	canvas.width = $(window).width() - 20;
+
+	$(window).on('resize', function() {
+		canvas.height = $(window).height() - 30;
+		canvas.width = $(window).width() - 20;
+	});
+
+	var fOn = true;
+	var topOn = true;
+	var blurOn = true;
+	var drawOn = false;
+
+	var g = [0, 0, 0.4, 0];
+	var gVal = 0.4;
+
+	window.addEventListener('keydown', function(e){
+		//console.log(e.key, e.which);
+		var k = e.key;
+		if(k == 'W' || k == 'w' || k == 'ص') keys[0] = true;
+		if(k == 'D' || k == 'd' || k == 'ي') keys[1] = true;
+		if(k == 'S' || k == 's' || k == 'س') keys[2] = true;
+		if(k == 'A' || k == 'a' || k == 'ش') keys[3] = true;
+	});
+
+	function setGravityArrow(){
+		if(g[0]) $('.glyphicon').prop('class', 'glyphicon glyphicon-arrow-up');
+		if(g[1]) $('.glyphicon').prop('class', 'glyphicon glyphicon-arrow-right');
+		if(g[2]) $('.glyphicon').prop('class', 'glyphicon glyphicon-arrow-down');
+		if(g[3]) $('.glyphicon').prop('class', 'glyphicon glyphicon-arrow-left');
+		if(!g[0] && !g[1] && !g[2] && !g[3]) $('.glyphicon').prop('class', 'glyphicon glyphicon-remove');
+	}
+
+	window.addEventListener('keyup', function(e){
+		//console.log(e.key, e.which);
+		var k = e.key;
+		if(k == 'ArrowUp'){
+			if(g[0]) g[0] = 0;
+			else g = [gVal, 0, 0, 0];
+		}
+		if(k == 'ArrowDown'){
+			if(g[2]) g[2] = 0;
+			else g = [0, 0, gVal, 0];
+		}
+		if(k == 'ArrowRight'){
+			if(g[1]) g[1] = 0;
+			else g = [0, gVal, 0, 0];
+		}
+		if(k == 'ArrowLeft'){
+			if(g[3]) g[3] = 0;
+			else g = [0, 0, 0, gVal];
+		}
+		setGravityArrow();
+
+		if(k == 'W' || k == 'w' || k == 'ص') keys[0] = false;
+		if(k == 'D' || k == 'd' || k == 'ي') keys[1] = false;
+		if(k == 'S' || k == 's' || k == 'س') keys[2] = false;
+		if(k == 'A' || k == 'a' || k == 'ش') keys[3] = false;
+		if(k == 'F' || k == 'f' || k == 'ب') fOn = !fOn;
+		if(k == 'B' || k == 'b' || k == 'ﻻ') blurOn = !blurOn;
+		if(k == 'R' || k == 'r' || k == 'ق') drawOn = !drawOn;
+		if(k == 'T' || k == 't' || k == 'ف') topOn = !topOn;
+
+		if(fOn) $('#frictionLight').css('background-color', 'green');
+		else $('#frictionLight').css('background-color', 'red');
+
+		if(topOn) $('canvas').css('border-top', '1px solid black');
+		else $('canvas').css('border-top', 'none');
+	});
+
+
+	var keys = [false, false, false, false];
+
+	//the main hero here
+	var ball = {
+		radius: 30,
+		x: canvas.width/2,
+		y: canvas.height/2,
+		vx: 0, //Math.ceil(-10 + Math.random()*20),
+		vy: 0, //Math.ceil(-5 + Math.random()*10),
+		color: 'navy',
+		draw: function(){
+			ctx.save();
+			ctx.fillStyle = this.color;
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, this.radius, Math.PI*2, 0);
+			ctx.closePath();
+			ctx.fill();
+			ctx.restore();
+		}
+	};
+
+	function action(){
+		// ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		//clear the previous frame (almost clear it)
+		ctx.save();
+		if(drawOn) ctx.fillStyle = 'rgba(255, 255, 255, 0)';
+		else if(blurOn) ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+		else ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.restore();
+
+		//add gravity acceleration
+		ball.vy -= g[0];
+		ball.vy += g[2];
+		ball.vx -= g[3];
+		ball.vx += g[1];
+
+		var change = 0.6;
+		if(keys[0]) ball.vy -= change;
+		if(keys[2]) ball.vy += change;
+		if(keys[1]) ball.vx += change;
+		if(keys[3]) ball.vx -= change;
+
+		//check the boundaries and add friction effect
+		var nx = ball.x + ball.vx;
+		var ny = ball.y + ball.vy;
+
+		//collid right
+		if(nx + ball.radius > canvas.width){
+			ball.vx -= g[1];
+			if(fOn){
+				ball.vx *= -0.75;
+				ball.vy *= 0.9;
+			}
+			else ball.vx *= -1;
+		}
+		//collid left
+		if(nx - ball.radius < 0){
+			ball.vx += g[3];
+			if(fOn){
+				ball.vx *= -0.75;
+				ball.vy *= 0.9;
+			}
+			else ball.vx *= -1;
+		}
+
+		//collid down
+		if(ny + ball.radius > canvas.height){
+			ball.vy -= g[2];
+
+			if(fOn){
+				ball.vy *= -0.75;
+				ball.vx *= 0.9;
+			}else{
+				ball.vy *= -1;
+			}
+		}
+
+		//collid up
+		if(topOn && ny - ball.radius < 0){
+			ball.vy += g[0];
+
+			if(fOn){
+				ball.vy *= -0.75;
+				ball.vx *= 0.9;
+			}else{
+				ball.vy *= -1;
+			}
+		}
+
+		//move the ball to its new place
+		ball.x += ball.vx;
+		ball.y += ball.vy;
+
+		//draw the ball in its new place
+		ball.draw();
+
+		requestAnimationFrame(action);
+	}
+
+	//start the scene :D
+	action();
+</script>
+
+</body>
+</html>
